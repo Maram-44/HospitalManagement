@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HospitalManagement.DataAccess", "HospitalManagement.DataAccess\HospitalManagement.DataAccess.csproj", "{C62C917B-E46D-4308-ACFD-8EE443BAD7A6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HospitalManagement.DataAccess", "HospitalManagement.DataAccess\HospitalManagement.DataAccess.csproj", "{C62C917B-E46D-4308-ACFD-8EE443BAD7A6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HospitalManagement.BussinessLogic", "HospitalManagement.BussinessLogic\HospitalManagement.BussinessLogic.csproj", "{FA06D87D-9D4F-42C6-9743-45FB57B5057F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HospitalManagement.BussinessLogic", "HospitalManagement.BussinessLogic\HospitalManagement.BussinessLogic.csproj", "{FA06D87D-9D4F-42C6-9743-45FB57B5057F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HosbitalManagement.Presentation", "HosbitalManagement.Presentation\HosbitalManagement.Presentation.csproj", "{15C7A8BC-F23B-4347-9E82-8F9E877E52D2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HosbitalManagement.API", "HosbitalManagement.Presentation\HosbitalManagement.API.csproj", "{15C7A8BC-F23B-4347-9E82-8F9E877E52D2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
