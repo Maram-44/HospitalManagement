@@ -34,5 +34,9 @@ namespace HospitalManagement.DataAccess.Repositories.IRepository
         void UpdateList(IEnumerable<T> myList);
 
         void DeleteList(IEnumerable<T> myList);
+
+        Task AddOneAsync(T entity);
+        Task UpdateOneAsync(T entity);
+        Task<T?> GetFirstOrDefaultAsync(Expression<Func<T, bool>> predicate);
     }
 }

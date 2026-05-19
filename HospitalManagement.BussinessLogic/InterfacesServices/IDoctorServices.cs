@@ -1,4 +1,5 @@
-﻿using HospitalManagement.BussinessLogic.ModelView;
+﻿using HospitalManagement.BussinessLogic.DTOs;
+using HospitalManagement.BussinessLogic.ModelView;
 using HospitalManagement.DataAccess.Entities;
 using System;
 using System.Collections.Generic;
@@ -10,11 +11,10 @@ namespace HospitalManagement.BussinessLogic.InterfacesServices
 {
     public interface IDoctorServices
     {
-        void AddDoctor(AddDoctorVM doctorVM);
-        IEnumerable<Doctor> GetAllDoctors();
-        Doctor GetDoctorById(int id);
-        IEnumerable<Doctor> GetDoctorsByDepartment(int departmentID);
-        void DeleteDoctor(int Id);
-        void UpdateDoctor(DoctorVM doctor);
+        Task<IEnumerable<DoctorDTO>> GetAllDoctors();
+        Task<DoctorDTO> GetDoctorById(int id);
+        Task<IEnumerable<DoctorDTO>> GetDoctorsByDepartment(int departmentID);
+        Task<bool> IsDoctorAvailable(int doctorId, DateOnly requestedDate);
+        Task<IEnumerable<WorkingDayDTO>> GetNextSevenAvailableDays(int doctorId);
     }
 }

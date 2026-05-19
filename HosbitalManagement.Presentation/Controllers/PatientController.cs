@@ -1,14 +1,14 @@
-﻿using HospitalManagement.BussinessLogic.InterfacesServices;
+﻿using HospitalManagement.BussinessLogic.DTOs;
+using HospitalManagement.BussinessLogic.InterfacesServices;
 using HospitalManagement.BussinessLogic.ModelView;
-using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HosbitalManagement.API.Controllers
 {
+    [Route("api/[controller]")]
     [ApiController]
-    [Route("[controller]")]
-    //[Authorize(Roles ="Admin")]
-    public class PatientController : Controller
+    public class PatientController : ControllerBase
     {
         private readonly IpatientServices _patientServices;
 
@@ -17,53 +17,45 @@ namespace HosbitalManagement.API.Controllers
             _patientServices = patientServices;
         }
 
+        [HttpGet("search")]
+        public async Task<IActionResult> GetPatient([FromQuery] string idNumber, [FromQuery] string idType)
+        {
+            // التحقق من المدخلات قبل إرهاق السيرفر
+            if (string.IsNullOrEmpty(idNumber) || string.IsNullOrEmpty(idType))
+                return BadRequest(new { message = "ID Number and Type are required" });
+
+            var patient = await _patientServices.GetPatientByIDNumberAndIdType(idNumber, idType);
+
+            if (patient == null)
+                return NotFound(new { message = "Patient not found" });
+
+            return Ok(patient);
+        }
+
         [HttpPost]
-        [Route("")]
-        public ActionResult<int> CreatePatient(AddPatientMV patientVM)
+        public async Task<IActionResult> CreateOrUpdate([FromBody] PatientDTO patientDTO)
         {
-            _patientServices.AddPatient(patientVM);
-            return Ok();
-        }
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-        [HttpPut]
-        [Route("")]
-        public ActionResult UpdatePatient(PatientVM patientVM)
-        {
-            _patientServices.UpdatePatient(patientVM);
-            return Ok();
-        }
-
-        [HttpDelete]
-        [Route("{id}")]
-        public ActionResult DeletePatient(int id)
-        {
-            _patientServices.DeletePatient(id);
-            return Ok();
-        }
-
-        [HttpGet]
-        [Route("")]
-        public ActionResult getAllPatient()
-        {
-            var Patients = _patientServices.GetAllPatients();
-            if (Patients != null)
+            try
             {
-                return Ok(Patients);
+                var result = await _patientServices.CreateOrUpdatePatientAsync(patientDTO);
+
+                // أفضل ممارسة: إرجاع 201 عند النجاح
+                return Ok(new
+                {
+                    success = true,
+                    message = "Patient data processed successfully",
+                    data = result
+                });
             }
-            
-            return NotFound();
+            catch (Exception ex)
+            {
+                // تسجيل الخطأ (Logging) مهم هنا في المشاريع الكبيرة
+                return StatusCode(500, new { success = false, message = "Internal server error" });
+            }
         }
 
-        [HttpGet]
-        [Route("{id}")]
-        public ActionResult GetPatient(int id)
-        {
-            var patient=_patientServices.GetPatient(id);
-           
-            if (patient != null)
-                return Ok(patient);
-
-            return NotFound();
-        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using HospitalManagement.BussinessLogic.ModelView;
+﻿using HospitalManagement.BussinessLogic.DTOs;
+using HospitalManagement.BussinessLogic.ModelView;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,9 @@ namespace HospitalManagement.BussinessLogic.InterfacesServices
 {
     public interface IAuthService
     {
-        string AuthenticateRequest(AuthenticationRequest request);
+        Task<bool> RequestOtpAsync(string email);
+        Task<AuthModel> VerifyOtpAsync(string email, string code);
+        Task<AuthModel> RefreshTokenAsync(string token);
+        Task<bool> RevokeTokenAsync(string token);
     }
 }

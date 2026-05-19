@@ -20,16 +20,16 @@ namespace HosbitalManagement.API.Controllers
             _authService = authService;
         }
 
-        [HttpPost]
-        [Route("auth")]
-        public ActionResult<string>AuthenticateUser(AuthenticationRequest request)
-        {
-            var response = _authService.AuthenticateRequest(request);
-            if(response == null)
-            {
-                return Unauthorized();
-            }
-            return Ok(response);
-        }
+        //[HttpPost]
+        //[Route("auth")]
+        //public ActionResult<string>AuthenticateUser(AuthenticationRequest request)
+        //{
+        //    var response = _authService.AuthenticateRequest(request);
+        //    if(response == null)
+        //    {
+        //        return Unauthorized();
+        //    }
+        //    return Ok(response);
+        //}
     }
 }

@@ -109,5 +109,22 @@ namespace HospitalManagement.DataAccess.Repositories
             context.Set<T>().RemoveRange(myList);
             context.SaveChanges();
         }
+
+        public async Task AddOneAsync(T entity)
+        {
+            await context.Set<T>().AddAsync(entity);
+            await context.SaveChangesAsync();
+        }
+
+        public async Task UpdateOneAsync(T entity)
+        {
+            context.Set<T>().Update(entity);
+            await context.SaveChangesAsync();
+        }
+
+        public async Task<T?> GetFirstOrDefaultAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await context.Set<T>().FirstOrDefaultAsync(predicate);
+        }
     }
 }

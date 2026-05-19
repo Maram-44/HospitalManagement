@@ -1,4 +1,5 @@
-﻿using HospitalManagement.BussinessLogic.ModelView;
+﻿using HospitalManagement.BussinessLogic.DTOs;
+using HospitalManagement.BussinessLogic.ModelView;
 using HospitalManagement.DataAccess.Entities;
 using System;
 using System.Collections.Generic;
@@ -10,10 +11,7 @@ namespace HospitalManagement.BussinessLogic.InterfacesServices
 {
     public interface IpatientServices
     {
-        public void AddPatient(AddPatientMV p);
-        public void UpdatePatient(PatientVM p);
-        public void DeletePatient(int p);
-        public IEnumerable<Patient> GetAllPatients();
-        public Patient GetPatient(int id);
+        Task<PatientDTO> GetPatientByIDNumberAndIdType(string IDNumber, string IDType);
+        Task<Patient> CreateOrUpdatePatientAsync(PatientDTO patientDTO);
     }
 }

@@ -13,12 +13,9 @@ namespace HospitalManagement.BussinessLogic.Tools
     {
         public Mapping() 
         {
-            CreateMap<PatientVM, Patient>();
-            CreateMap<DoctorVM, Doctor>();
-            CreateMap<DepartmentVM, Department>();
+            CreateMap<DoctorDTO, Doctor>().ReverseMap();
+            CreateMap<DepartmentDTO, Department>().ReverseMap();
             CreateMap<AppoimentVM,Appointment>();
-            CreateMap<AddPatientMV, Patient>();
-            CreateMap<AddDoctorVM,Doctor>();
         }
     }
 }
