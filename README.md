@@ -48,8 +48,6 @@ The project is split into three modular logical layers to ensure a clean separat
 * **Database & ORM:** SQL Server via Entity Framework Core (EF Core)
 * **Payment Integration:** Stripe Dotnet SDK (Direct API Client-Side Confirmation Workflow)
 * **Security:** JWT Authentication with Role-Based Access Control
-* **Internationalization:** .NET Localization Capabilities (`IStringLocalizer`)
-
 ---
 
 ## 🔧 Getting Started & Local Setup
