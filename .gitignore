@@ -404,3 +404,5 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+/HosbitalManagement.Presentation/appsettings.json
+/HospitalManagement.DataAccess/setting.json

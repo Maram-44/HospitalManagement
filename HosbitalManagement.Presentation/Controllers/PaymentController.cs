@@ -1,6 +1,6 @@
 ﻿using HospitalManagement.BussinessLogic.DTOs;
-using HospitalManagement.BussinessLogic.InterfacesServices;
 using HospitalManagement.BussinessLogic.ModelView;
+using HospitalManagement.BussinessLogic.Services.InterfacesServices;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;

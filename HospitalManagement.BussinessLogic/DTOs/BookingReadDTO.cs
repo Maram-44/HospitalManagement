@@ -9,9 +9,12 @@ namespace HospitalManagement.BussinessLogic.DTOs
     public class BookingReadDTO
     {
         public int AppointmentId { get; set; }
-        public string DoctorName { get; set; }
-        public string DoctorGender { get; set; }
-        public string Specsiality { get; set; }
+        public string DoctorNameAr { get; set; }
+        public string DoctorNameEn { get; set; }
+        public string DoctorGenderAr { get; set; }
+        public string DoctorGenderEn { get; set; }
+        public string SpecsialityAr { get; set; }
+        public string SpecsialityEn { get; set; }
         public string AppointmentStatus { get; set; }
         public decimal AppointmentPrice { get; set; }
         public DateTime AppointmentDate { get; set; }

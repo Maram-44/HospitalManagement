@@ -1,5 +1,5 @@
 ﻿using HospitalManagement.BussinessLogic.DTOs;
-using HospitalManagement.BussinessLogic.InterfacesServices;
+using HospitalManagement.BussinessLogic.Services.InterfacesServices;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 

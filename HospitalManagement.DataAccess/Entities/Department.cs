@@ -12,8 +12,10 @@ namespace HospitalManagement.DataAccess.Entities
         [Key]
         public int Id { get; set; }
         public string Name { get; set; }
+        public string? NameAr { get; set; }
         public string? Image { get; set; }
         public string? Description { get; set; }
+        public string? DescriptionAr { get; set; }
         public ICollection<Doctor> doctors { get; set; }
     }
 }

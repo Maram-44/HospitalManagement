@@ -1,6 +1,6 @@
 ﻿using HospitalManagement.BussinessLogic.DTOs;
-using HospitalManagement.BussinessLogic.InterfacesServices;
 using HospitalManagement.BussinessLogic.ModelView;
+using HospitalManagement.BussinessLogic.Services.InterfacesServices;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,11 +8,11 @@ namespace HosbitalManagement.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class PatientController : ControllerBase
+    public class PatientsController : ControllerBase
     {
         private readonly IpatientServices _patientServices;
 
-        public PatientController(IpatientServices patientServices)
+        public PatientsController(IpatientServices patientServices)
         {
             _patientServices = patientServices;
         }

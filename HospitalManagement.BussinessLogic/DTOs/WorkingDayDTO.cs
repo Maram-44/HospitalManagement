@@ -8,7 +8,8 @@ namespace HospitalManagement.BussinessLogic.DTOs
 {
     public class WorkingDayDTO
     {
-        public string DayName { get; set; }
+        public string DayNameAr { get; set; }
+        public string DayNameEn { get; set; }
         public string Date { get; set; }
         public string FullDate { get; set; }
     }

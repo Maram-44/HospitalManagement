@@ -1,9 +1,7 @@
-﻿using HospitalManagement.BussinessLogic.InterfacesServices;
-using HospitalManagement.BussinessLogic.Services;
+﻿using HospitalManagement.BussinessLogic.Services;
+using HospitalManagement.BussinessLogic.Services.InterfacesServices;
 using HospitalManagement.BussinessLogic.Tools;
 using HospitalManagement.DataAccess.Data;
-using HospitalManagement.DataAccess.Repositories;
-using HospitalManagement.DataAccess.Repositories.IRepository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,10 +18,9 @@ namespace HospitalManagement.BussinessLogic
     {
         public static IServiceCollection AddBusinessLayer(this IServiceCollection services)
         {
-            services.AddAutoMapper(typeof(Mapping));
+            //services.AddAutoMapper(typeof(Mapping));
             var conn = new ConfigurationBuilder().AddJsonFile("setting.json").Build();
             services.AddDbContext<AppDbContext>(options => options.UseSqlServer(conn.GetSection("conn").Value));
-            services.AddScoped(typeof(IGenericRepository<>), typeof(MainRepo<>));
             services.AddScoped(typeof(IpatientServices),typeof(PatientServices));
             services.AddScoped(typeof(IAuthService), typeof(AuthService));
             services.AddScoped(typeof(IDoctorServices), typeof(DoctorServices));
@@ -31,6 +28,7 @@ namespace HospitalManagement.BussinessLogic
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IAppoimentServices, AppoimentServices>();
+            services.AddScoped<IAIRecommendationService, AIRecommendationService>();
 
             return services;
         }

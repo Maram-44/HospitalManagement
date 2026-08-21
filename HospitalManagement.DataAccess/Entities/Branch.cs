@@ -12,6 +12,7 @@ namespace HospitalManagement.DataAccess.Entities
         [Key]
         public int Id { get; set; }
         public string BranchName { get; set; } = null!;
+        public string? BranchNameAr { get; set; }
         public ICollection<Doctor> Doctors { get; set; }
 
     }

@@ -1,4 +1,4 @@
-﻿using HospitalManagement.BussinessLogic.InterfacesServices;
+﻿using HospitalManagement.BussinessLogic.Services.InterfacesServices;
 using MailKit.Net.Smtp;
 using Microsoft.Extensions.Configuration;
 using MimeKit;

@@ -1,5 +1,5 @@
 ﻿using HospitalManagement.BussinessLogic.DTOs;
-using HospitalManagement.BussinessLogic.InterfacesServices;
+using HospitalManagement.BussinessLogic.Services.InterfacesServices;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -11,11 +11,11 @@ namespace HosbitalManagement.API.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public class AppointmentController : ControllerBase
+    public class AppointmentsController : ControllerBase
     {
         private readonly IAppoimentServices _appointmentServices;
 
-        public AppointmentController(IAppoimentServices appointmentServices)
+        public AppointmentsController(IAppoimentServices appointmentServices)
         {
             _appointmentServices = appointmentServices;
         }

@@ -1,12 +1,11 @@
 using HosbitalManagement.API;
 using HospitalManagement.BussinessLogic;
-using HospitalManagement.BussinessLogic.InterfacesServices;
+using HospitalManagement.BussinessLogic.Services.InterfacesServices;
 using HospitalManagement.BussinessLogic.ModelView;
 using HospitalManagement.BussinessLogic.Services;
 using HospitalManagement.BussinessLogic.Tools;
 using HospitalManagement.DataAccess.Data;
 using HospitalManagement.DataAccess.Entities;
-using HospitalManagement.DataAccess.Repositories.IRepository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
@@ -76,18 +75,24 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
     });
 
+var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? new[] { "https://localhost:5173" };
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowPulseApp",
         policy => policy
-            .WithOrigins("https://localhost:5173")
+            .WithOrigins(allowedOrigins)
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials());
-
 });
 
+builder.Services.AddHttpClient();
+
 var app = builder.Build();
+
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://+:{port}");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

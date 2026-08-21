@@ -1,8 +1,8 @@
-﻿using AutoMapper;
-using HospitalManagement.BussinessLogic.InterfacesServices;
-using HospitalManagement.BussinessLogic.ModelView;
+﻿using HospitalManagement.BussinessLogic.ModelView;
+using HospitalManagement.BussinessLogic.Services.InterfacesServices;
+using HospitalManagement.DataAccess.Data;
 using HospitalManagement.DataAccess.Entities;
-using HospitalManagement.DataAccess.Repositories.IRepository;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,25 +13,30 @@ namespace HospitalManagement.BussinessLogic.Services
 {
     public class DepartmentServices : IDepartmentServices
     {
-        private readonly IGenericRepository<Department> _repository;
-        private readonly IMapper _mapper;
+        private readonly AppDbContext _context;
 
-        public DepartmentServices(IGenericRepository<Department> repository, IMapper mapper)
+        public DepartmentServices( AppDbContext context)
         {
-            _repository = repository;
-            _mapper = mapper;
-        }
-
-        public async Task<DepartmentDTO> GetDepartmentById(int departmentId)
-        {
-            Department department =await _repository.FindByIdAsync(departmentId);
-            return _mapper.Map<DepartmentDTO>(department);
+            _context = context;
         }
 
         public async Task<IEnumerable<DepartmentDTO>> GetDepartments()
         {
-           var departments =  _repository.FindAll();
-            return _mapper.Map<IEnumerable<DepartmentDTO>>(departments);
+            // جلب البيانات وتحويلها مباشرة داخل استعلام قاعدة البيانات (أداء عالي جداً واختصار للكود)
+            var departmentDtos = await _context.Departments
+                .AsNoTracking()
+                .Select(d => new DepartmentDTO
+                {
+                    Id = d.Id,
+                    NameEn = d.Name,
+                    NameAr = d.NameAr,
+                    Image = d.Image,
+                    DescriptionEn = d.Description,
+                    DescriptionAr = d.DescriptionAr
+                })
+                .ToListAsync();
+
+            return departmentDtos;
         }
     }
 }

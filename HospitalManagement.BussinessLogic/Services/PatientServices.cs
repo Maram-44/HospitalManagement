@@ -1,10 +1,9 @@
-﻿using AutoMapper;
-using HospitalManagement.BussinessLogic.DTOs;
-using HospitalManagement.BussinessLogic.InterfacesServices;
+﻿using HospitalManagement.BussinessLogic.DTOs;
+using HospitalManagement.BussinessLogic.Mappers;
 using HospitalManagement.BussinessLogic.ModelView;
+using HospitalManagement.BussinessLogic.Services.InterfacesServices;
 using HospitalManagement.DataAccess.Data;
 using HospitalManagement.DataAccess.Entities;
-using HospitalManagement.DataAccess.Repositories.IRepository;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -31,29 +30,14 @@ namespace HospitalManagement.BussinessLogic.Services
             {
                 if (patient == null)
                 {
-                    // حالة مريض جديد: إنشاء سجل
-                    patient = new Patient()
-                    {
-                        FullName = patientDTO.FullName,
-                        Gender = patientDTO.Gender,
-                        DateOfBirth = patientDTO.DateOfBirth,
-                        Phone = patientDTO.Phone,
-                        Email = patientDTO.Email,
-                        IdNumber = patientDTO.IdNumber,
-                        IdType = patientDTO.IdType,
-                        Nationality=patientDTO.Nationality == null?"Saudi":patientDTO.Nationality,
-                    };
+                    // حالة مريض جديد: التحويل لـ Entity والإضافة
+                    patient = patientDTO.ToEntity();
                     _context.Patients.Add(patient);
                 }
                 else
                 {
-                    // حالة مريض مسجل مسبقاً: تحديث البيانات (لأن اليوزر قد يعدل عليها في الفورم)
-                    patient.FullName = patientDTO.FullName;
-                    patient.Gender = patientDTO.Gender;
-                    patient.DateOfBirth = patientDTO.DateOfBirth;
-                    patient.Phone = patientDTO.Phone;
-                    patient.Email = patientDTO.Email;
-
+                    // حالة مريض مسجل مسبقاً: تحديث الكائن مباشرة باستخدام المابير
+                    patient.UpdateFromDto(patientDTO);
                     _context.Patients.Update(patient);
                 }
 
@@ -75,19 +59,7 @@ namespace HospitalManagement.BussinessLogic.Services
 
             if (patient == null) return null;
 
-            // تحويل الكيان إلى DTO (يمكنك استخدام AutoMapper هنا إذا كنت قد أعددته)
-            return new PatientDTO
-            {
-                Id = patient.Id,
-                FullName = patient.FullName,
-                Gender = patient.Gender,
-                DateOfBirth = patient.DateOfBirth,
-                Phone = patient.Phone,
-                Email = patient.Email,
-                IdNumber = patient.IdNumber,
-                IdType = patient.IdType,
-                Nationality = patient.Nationality
-            };
+            return patient.ToDto();
         }
     }
 }

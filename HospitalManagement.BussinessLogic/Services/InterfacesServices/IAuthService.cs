@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HospitalManagement.BussinessLogic.InterfacesServices
+namespace HospitalManagement.BussinessLogic.Services.InterfacesServices
 {
     public interface IAuthService
     {

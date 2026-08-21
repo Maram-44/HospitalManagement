@@ -1,24 +1,19 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HospitalManagement.DataAccess.Entities
+namespace HospitalManagement.BussinessLogic.DTOs
 {
-    public class Doctor
+    public class CreateDoctorDto
     {
-        [Key]
-        public int Id { get; set; }
-        // الاسم بالعربي
         public string FirstNameAr { get; set; }
         public string SecondNameAr { get; set; }
         public string ThirdNameAr { get; set; }
         public string LastNameAr { get; set; }
 
-        // الاسم بالإنجليزي
         public string FirstName { get; set; }
         public string SecoundName { get; set; }
         public string ThirdName { get; set; }
@@ -33,20 +28,14 @@ namespace HospitalManagement.DataAccess.Entities
         public string GenderAr { get; set; }
         public string Gender { get; set; }
 
-        [EmailAddress]
         public string Email { get; set; }
         public string Phone { get; set; }
         public decimal Price { get; set; }
-        public string? ImagePath { get; set; }
 
-        [ForeignKey("department")]
         public int DepartmentId { get; set; }
-        public Department department { get; set; }
-        [ForeignKey("branch")]
         public int? BranchId { get; set; }
-        public Branch branch { get; set; }
-        public ICollection<Appointment> DoctorAppointments { get; set; }
-        public ICollection<DoctorLeave> doctorLeaves { get; set; }
 
+        // هذا حقل الملف (الصورة) - في بوستمان اختر نوعه File
+        public IFormFile? Image { get; set; }
     }
 }

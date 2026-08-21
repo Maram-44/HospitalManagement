@@ -1,15 +1,14 @@
-﻿using AutoMapper;
-using HospitalManagement.BussinessLogic.DTOs;
-using HospitalManagement.BussinessLogic.InterfacesServices;
+﻿using HospitalManagement.BussinessLogic.DTOs;
 using HospitalManagement.BussinessLogic.ModelView;
+using HospitalManagement.BussinessLogic.Services.InterfacesServices;
 using HospitalManagement.DataAccess.Data;
 using HospitalManagement.DataAccess.Entities;
 using HospitalManagement.DataAccess.Enums;
-using HospitalManagement.DataAccess.Repositories.IRepository;
 using Microsoft.EntityFrameworkCore;
 using Stripe;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,13 +19,13 @@ namespace HospitalManagement.BussinessLogic.Services
     {
         private readonly AppDbContext _context;
         private readonly IpatientServices _patientServices;
-        private readonly IDoctorServices _doctorServices; // إضافة الخدمة هنا
+        private readonly IDoctorServices _doctorServices;
 
         public AppoimentServices(AppDbContext context, IpatientServices patientServices, IDoctorServices doctorServices)
         {
             _context = context;
             _patientServices = patientServices;
-            _doctorServices = doctorServices; // ربطها
+            _doctorServices = doctorServices;
         }
 
         public async Task<decimal> GetExpectedPrice(int doctorId, int? patientId, DateTime appointmentDate)
@@ -37,40 +36,35 @@ namespace HospitalManagement.BussinessLogic.Services
             if (patientId.HasValue)
             {
                 var now = DateTime.Now;
+                // 1. تحديد تاريخ البداية (تاريخ اليوم قبل 7 أيام)
+                DateOnly sevenDaysAgo = DateOnly.FromDateTime(DateTime.Today.AddDays(-7));
 
-                // 1. جلب آخر حجز "كشف" للمريض مع هذا الطبيب بشرط أن يكون:
-                // إما مؤكداً (Confirmed) أو مكتملاً (Completed) ولم يتم إلغاؤه.
+                // 2. جلب آخر حجز بشرط أن يكون تاريخه ضمن الـ 7 أيام الماضية وحتى اليوم
                 var lastAppointment = await _context.Appointments
                     .Where(a => a.PatientId == patientId &&
                                 a.DoctorId == doctorId &&
                                 a.IsReview == false &&
-                                (a.Status == enAppoimentStatus.confirmed || a.Status == enAppoimentStatus.Completed))
-                    .OrderByDescending(a => a.AppoimentDate)
+                                (a.Status == enAppoimentStatus.confirmed || a.Status == enAppoimentStatus.Completed) &&
+                                a.Date >= sevenDaysAgo) // الفلترة الذكية من البداية لقاعدة البيانات
+                    .OrderByDescending(a => a.Date)
                     .ThenByDescending(a => a.Time)
                     .FirstOrDefaultAsync();
 
                 if (lastAppointment != null)
                 {
-                    // 2. دمج التاريخ والوقت للموعد القديم لمعرفة لحظة بدئه الفعالية
-                    TimeSpan appointmentTime = lastAppointment.Time;
-                    DateTime fullAppointmentDateTime = lastAppointment.AppoimentDate.Date + appointmentTime;
-
-                    // 3. حساب الفارق الزمني بين وقت الموعد القديم واللحظة الحالية
-                    var timePassed = now - fullAppointmentDateTime;
-
-                    // 💡 لوجيك التحديث التلقائي (في الخلفية عند الطلب):
-                    // إذا كان الموعد في قاعدة البيانات ما زال 'Confirmed' ولكن وقته مر وانتهى (timePassed > 0)
-                    // نقوم بتحديث حالته فوراً في قاعدة البيانات إلى 'Completed' لكي يتنظف السيستم تلقائياً
-                    if (lastAppointment.Status == enAppoimentStatus.confirmed && timePassed.TotalSeconds > 0)
+                    // [تحديث تلقائي صامت للحالة الحالية]
+                    DateTime fullOldAppointmentDateTime = lastAppointment.Date.ToDateTime(TimeOnly.FromTimeSpan(lastAppointment.Time));
+                    var timePassedFromNow = now - fullOldAppointmentDateTime;
+                    if (lastAppointment.Status == enAppoimentStatus.confirmed && timePassedFromNow.TotalSeconds > 0)
                     {
                         lastAppointment.Status = enAppoimentStatus.Completed;
-                        await _context.SaveChangesAsync(); // حفظ الحالة الجديدة صامتاً
+                        await _context.SaveChangesAsync();
                     }
 
-                    // 4. الشرط الطبي: يجب أن يكون الموعد قد بدأ فعلاً في الماضي، ولم يمر عليه أكثر من 7 أيام
-                    if (timePassed.TotalDays >= 0 && timePassed.TotalDays <= 7)
+                    // الشرط الصحيح: يجب أن يكون الموعد القديم قد اكتمل (أو تم تحديثه تلقائياً لمكتمل)
+                    if (lastAppointment.Status == enAppoimentStatus.Completed)
                     {
-                        return 0; // يستحق مراجعة مجانية!
+                            return 0; // مراجعة مجانية
                     }
                 }
             }
@@ -90,7 +84,7 @@ namespace HospitalManagement.BussinessLogic.Services
                 // 2. معالجة بيانات المريض
                 var patient = await _patientServices.CreateOrUpdatePatientAsync(request.PatientInfo);
 
-                // 3. استدعاء الفنكشن الموحدة لحساب السعر والتحقق من المراجعة
+                // 3. نمرر تاريخ الزيارة الطبي المطلوب (request.Date) الفعلي لحساب السعر والمراجعة بدقة
                 decimal finalPrice = await GetExpectedPrice(request.DoctorId, patient.Id, request.Date.ToDateTime(TimeOnly.MinValue));
                 bool isReview = finalPrice == 0;
 
@@ -103,20 +97,28 @@ namespace HospitalManagement.BussinessLogic.Services
                 }
 
                 // 5. تحليل الوقت وإنشاء الموعد
-                if (!DateTime.TryParseExact(request.Time, "hh:mm tt", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime parsedTime))
+                if (!DateTime.TryParseExact(
+                    request.Time,
+                    "HH:mm",
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.None,
+                    out DateTime parsedTime))
+                {
                     return null;
+                }
 
                 var appointment = new Appointment
                 {
                     PatientId = patient.Id,
                     DoctorId = request.DoctorId,
-                    Date = request.Date,
-                    Time = parsedTime.TimeOfDay,
+                    Date = request.Date, // تاريخ الزيارة المحجوز
+                    Time = parsedTime.TimeOfDay, // وقت الزيارة المحجوز
                     Price = finalPrice,
                     IsReview = isReview,
                     StripePaymentIntentId = isReview ? "FREE_REVIEW" : request.StripePaymentIntentId,
                     Status = enAppoimentStatus.confirmed,
-                    UserId = userId
+                    UserId = userId,
+                    AppoimentDate = DateTime.Now // هذا تاريخ ووقت إنشاء الحجز بالسيستم (سليم)
                 };
 
                 _context.Appointments.Add(appointment);
@@ -133,13 +135,18 @@ namespace HospitalManagement.BussinessLogic.Services
 
         public async Task<IEnumerable<BookingReadDTO>?> GetAppointmentsByUserID(string userId)
         {
-            // 1. جلب المواعيد الخام من قاعدة البيانات كـ List أولاً إلى الذاكرة
+            // التعديل هنا: نفلتر القائمة بناءً على تاريخ الزيارة الطبي الفعلي (Date) وليس تاريخ كتابة السجل (AppoimentDate)
+            // لكي تظهر المواعيد المستقبلية والماضية للمريض بشكل يعتمد تماماً على يوم الزيارة
+            var todayOnly = DateOnly.FromDateTime(DateTime.Today);
+            var limitDate = todayOnly.AddDays(-90); // آخر 90 يوماً من الزيارات الطبية
+
             var appointmentsList = await _context.Appointments
                 .Include(a => a.doctor)
                 .Include(a => a.patient)
-                .Where(a => a.UserId == userId && a.AppoimentDate >= DateTime.Today.AddDays(-90))
-                .OrderByDescending(a => a.AppoimentDate)
+                .Where(a => a.UserId == userId && a.Date >= limitDate) // التعديل هنا للفلترة بـ Date المختار
+                .OrderByDescending(a => a.Date) // الترتيب بناءً على تاريخ الزيارة
                 .ThenByDescending(a => a.Time)
+                .AsNoTracking()
                 .ToListAsync();
 
             if (!appointmentsList.Any()) return new List<BookingReadDTO>();
@@ -147,48 +154,45 @@ namespace HospitalManagement.BussinessLogic.Services
             var now = DateTime.Now;
             bool needToSave = false;
 
-            // 2. تطبيق الـ Lazy Update في الذاكرة (Memory) لكل موعد انتهى وقته
+            // 2. تطبيق الـ Lazy Update بناءً على تاريخ ووقت الزيارة الطبي الفعلي المدمجين
             foreach (var app in appointmentsList)
             {
                 if (app.Status == enAppoimentStatus.confirmed)
                 {
-                    DateTime fullDateTime = app.AppoimentDate.Date + app.Time;
+                    DateTime fullDateTime = app.Date.ToDateTime(TimeOnly.FromTimeSpan(app.Time)); // التعديل هنا
 
-                    // إذا مر وقت الموعد في الماضي، حوله فوراً إلى Completed
                     if (fullDateTime < now)
                     {
-                        app.Status = enAppoimentStatus.Completed; // تحديث في الذاكرة
-                        needToSave = true; // نرفع راية تخبرنا بضرورة الحفظ في قاعدة البيانات
+                        app.Status = enAppoimentStatus.Completed;
+                        needToSave = true;
                     }
                 }
             }
 
-            // 3. إذا تم تحديث أي موعد، نحفظ التعديلات في قاعدة البيانات صامتاً في الخلفية
             if (needToSave)
             {
                 await _context.SaveChangesAsync();
             }
 
-            // 4. الآن نقوم بعمل الـ Mapping إلى الـ DTO والترتيب النهائي الفخم للمستخدم
+            // 4. الـ Mapping والترتيب النهائي للفرونت إند بقراءة دقيقة من الحقول الصحيحة
             var dtoResult = appointmentsList
                 .Select(a => new BookingReadDTO
                 {
                     AppointmentId = a.Id,
-                    DoctorName = $"Dr. {a.doctor.FirstName} {a.doctor.LastName}",
-                    Specsiality = a.doctor.Specialty,
-
-                    // ستقرأ الـ Completed التي حدثناها بالأعلى فوراً
+                    DoctorNameAr = $"{a.doctor.FirstNameAr} {a.doctor.LastNameAr}",
+                    DoctorNameEn = $"{a.doctor.FirstName} {a.doctor.LastName}",
+                    SpecsialityAr = a.doctor.SpecialtyAr,
+                    SpecsialityEn = a.doctor.Specialty,
                     AppointmentStatus = a.Status == enAppoimentStatus.confirmed ? "Confirmed" :
                                         a.Status == enAppoimentStatus.Completed ? "Completed" : "Canceled",
-
                     AppointmentPrice = a.Price,
-                    DoctorGender = a.doctor.gender,
-                    AppointmentDate = a.AppoimentDate,
+                    DoctorGenderEn = a.doctor.Gender,
+                    DoctorGenderAr = a.doctor.GenderAr,
+                    AppointmentDate = a.Date.ToDateTime(TimeOnly.MinValue), // نقوم بتحويل الـ Date الطبي لعرضه بالـ DTO
                     Time = a.Time,
                     PatientName = a.patient.FullName,
                     PatientIdNumber = a.patient.IdNumber
                 })
-                // ترتيب يضع الـ Confirmed والـ Completed أولاً، ثم المكنسل في الأسفل
                 .OrderByDescending(a => a.AppointmentStatus == "Confirmed" || a.AppointmentStatus == "Completed")
                 .ToList();
 
@@ -197,34 +201,26 @@ namespace HospitalManagement.BussinessLogic.Services
 
         public async Task<bool> CancelAppointmentAsync(int appointmentId)
         {
-            // 1. جلب الموعد مباشرة من الكونتكست مع التأكد من وجوده
             var appointment = await _context.Appointments
                 .FirstOrDefaultAsync(a => a.Id == appointmentId);
 
             if (appointment == null) return false;
 
-            // 2. التحقق من أن الموعد ليس مكنسل أصلاً
             if (appointment.Status == enAppoimentStatus.CancelledByPatient)
             {
                 throw new Exception("هذا الموعد ملغى بالفعل.");
             }
 
-            // 3. التحقق من شرط الـ 12 ساعة (باستخدام AppoimentDate الموجود في الـ Entity)
-            // 1. دمج التاريخ والوقت من قاعدة البيانات في متغير واحد
-            // افترضنا أن appointment.AppointmentDate هو التاريخ و appointment.Time هو TimeSpan
-            DateTime appointmentFullDateTime = appointment.AppoimentDate.Date.Add(appointment.Time);
+            // التعديل هنا: دمج التاريخ الطبي الفعلي (Date) مع الوقت (Time) لحساب مهلة الـ 12 ساعة بدقة متناهية
+            DateTime appointmentFullDateTime = appointment.Date.ToDateTime(TimeOnly.FromTimeSpan(appointment.Time));
 
-            // 2. حساب الفرق بين وقت الموعد والوقت الحالي
             TimeSpan timeUntilAppointment = appointmentFullDateTime - DateTime.Now;
 
-            // 3. التحقق من شرط الـ 12 ساعة
             if (timeUntilAppointment.TotalHours < 12)
             {
                 throw new Exception("لا يمكن إلغاء الموعد قبل أقل من 12 ساعة من موعده المحدد.");
             }
 
-            // 4. منطق الاسترداد المالي عبر Stripe
-            // الشرط: ليس مراجعة (IsReview == false) ويوجد معرف دفع
             if (!appointment.IsReview && !string.IsNullOrEmpty(appointment.StripePaymentIntentId))
             {
                 try
@@ -238,15 +234,11 @@ namespace HospitalManagement.BussinessLogic.Services
                 }
                 catch (StripeException ex)
                 {
-                    // تسجيل الخطأ أو رميه لإعلام الواجهة بفشل الاسترداد
                     throw new Exception($"فشلت عملية استرداد الأموال من Stripe: {ex.Message}");
                 }
             }
 
-            // 5. تحديث الحالة في قاعدة البيانات
             appointment.Status = enAppoimentStatus.CancelledByPatient;
-
-            // 6. حفظ التغييرات مباشرة عبر الكونتكست
             var result = await _context.SaveChangesAsync();
 
             return result > 0;
