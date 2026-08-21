@@ -8,7 +8,7 @@ COPY . .
 RUN dotnet restore ./HospitalManagement.sln
 
 # ‰‰‘— »” „‘—Ê⁄ «·‹ API (›ÌÂ ‰ﬁÿ… «· ‘€Ì· Program.cs)
-RUN dotnet publish ./HosbitalManagement.API/HosbitalManagement.API.csproj -c Release -o /app
+RUN dotnet publish ./HosbitalManagement.Presentation/HosbitalManagement.API.csproj -c Release -o /app
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
