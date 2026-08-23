@@ -406,3 +406,4 @@ FodyWeavers.xsd
 *.sln.iml
 /HosbitalManagement.Presentation/appsettings.json
 /HospitalManagement.DataAccess/setting.json
+/HospitalManagement.DataAccess/setting.json
