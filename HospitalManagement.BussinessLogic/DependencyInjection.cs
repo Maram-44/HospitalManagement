@@ -16,12 +16,12 @@ namespace HospitalManagement.BussinessLogic
 {
     public static class DependencyInjection
     {
-        public static IServiceCollection AddBusinessLayer(this IServiceCollection services)
+        public static IServiceCollection AddBusinessLayer(this IServiceCollection services, IConfiguration configuration)
         {
-            //services.AddAutoMapper(typeof(Mapping));
-            var conn = new ConfigurationBuilder().AddJsonFile("setting.json").Build();
-            services.AddDbContext<AppDbContext>(options => options.UseSqlServer(conn.GetSection("conn").Value));
-            services.AddScoped(typeof(IpatientServices),typeof(PatientServices));
+            services.AddDbContext<AppDbContext>(options =>
+           options.UseSqlServer(configuration["conn"]));
+
+            services.AddScoped(typeof(IpatientServices), typeof(PatientServices));
             services.AddScoped(typeof(IAuthService), typeof(AuthService));
             services.AddScoped(typeof(IDoctorServices), typeof(DoctorServices));
             services.AddScoped(typeof(IDepartmentServices), typeof(DepartmentServices));
@@ -29,7 +29,6 @@ namespace HospitalManagement.BussinessLogic
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IAppoimentServices, AppoimentServices>();
             services.AddScoped<IAIRecommendationService, AIRecommendationService>();
-
             return services;
         }
     }
