@@ -16,11 +16,6 @@ namespace HospitalManagement.DataAccess.Data
         {
             
         }
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            var conn = new ConfigurationBuilder().AddJsonFile("setting.json").Build();
-            optionsBuilder.UseSqlServer(conn.GetSection("conn").Value);
-        }
 
         public DbSet<Patient> Patients { get; set; }
         public DbSet<Doctor> Doctors { get; set; }
